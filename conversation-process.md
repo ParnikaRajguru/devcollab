@@ -483,4 +483,76 @@ metadata* (`SetMetadata`); `Reflector` retrieves it at request time; the guard
 
 ---
 
+## Session 5 — Phase 9: Files inside projects
+
+### Goal
+`File` entity + CRUD nested under projects (`/projects/:id/files`), reusing
+the existing `@Roles` + `RolesGuard` for RBAC (viewer read / collaborator
+write / owner delete). Decisions taken with defaults after the interview was
+skipped: **no versioning yet** (add history when diffing/review arrives) and
+**path-string folders** (folders derived at read time, no folder entity).
+
+### What was done, in order
+1. `files/file.entity.ts` — uuid PK, `project_id` FK (CASCADE), `path`
+   varchar(500), `content` TEXT, `created_by` FK, Created/UpdatedDate;
+   `@Unique(['project_id','path'])`.
+2. DTOs: `create-file` (path regex-validated, content string),
+   `update-file` (content only).
+3. `files.service.ts` — list (metadata only via `select`, content excluded),
+   findOne (full content), create (project exists + 23505 -> 409),
+   update (save, `@UpdateDateColumn` bumps `updated_at`), remove.
+4. `files.controller.ts` — 5 routes, all under existing
+   `@UseGuards(JwtAuthGuard, RolesGuard)`; GETs `@Roles(VIEWER)`,
+   POST/PATCH `@Roles(COLLABORATOR)`, DELETE `@Roles(OWNER)`.
+5. Wired into `app.module.ts` (File entity + FilesModule).
+
+### Errors hit & the lesson each taught
+1. **TS2307**: `file.entity.ts` imported `User` from `'./user.entity'` —
+   wrong dir (file lives in `src/files/`, User in `src/users/`). Nested
+   modules need `../users/...` relative imports.
+2. **UnknownDependenciesException: RolesGuard can't resolve
+   ProjectMemberRepository in FilesModule**: a guard is instantiated in the
+   module that USES it, not the module that declares it. FilesModule had to
+   add `ProjectMember` to its own `TypeOrmModule.forFeature([...])`. (In
+   ProjectsModule it worked because the same guard + repo live there
+   together.) First instance of the module-local injector gotcha.
+3. Path regex v1 allowed leading slash + double slashes; tightened to
+   `^[a-zA-Z0-9._-]+(\/[a-zA-Z0-9._-]+)*$`.
+
+### Verified live (24/24 assertions)
+- Collaborator creates `package.json` + `src/main.ts` (201, correct
+  `created_by`); duplicate path 409; `/evil.ts` & `a//b.ts` 400.
+- List returns metadata only (no content), both files, path-ordered.
+- Viewer: GET file 200 + content; create/update/delete all 403.
+- Collaborator: update 200 (content changed); delete 403.
+- Outsider list 403; owner delete 200; list shrinks; deleted file 404.
+
+### Interview notes
+**Path-as-folder vs folder entities**: a string path is the minimal model —
+sorting by path gives a valid tree, no trees/recursion/DB cycles. Cost: rename
+= "move file", and "folder belongs to a file" conflicts (file `a` + file
+`a/b`) need explicit rules. Upgrade to a folder entity only when drag-to-move
+operations justify the complexity (YAGNI now).
+
+**Why list strips content**: the file tree view should never pay to transfer
+every file's body; an on-demand `GET /files/:id` fetches content only for the
+open file. Pay-per-need, and it halves payloads.
+
+**1GB TEXT vs blob**: code files are small; TEXT is plenty and keeps rows
+readable/debuggable. Binary + blob + filesystem-level storage (S3 buckets) is
+the later "import repo" feature.
+
+**Guards are module-local**: `@UseGuards(SomeGuardClass)` makes Nest build the
+guard inside the USING module's injector, so every module that uses RolesGuard
+must provide ProjectMemberRepository. Shared guards across feature modules are
+a strong signal for a shared `AuthzModule` (later refactor).
+
+### How to reproduce later
+1. `docker compose up -d`; `cd apps\api && npm run start:dev`.
+2. Register/login; create project; add a collaborator + viewer.
+3. As collaborator: `POST /projects/:id/files` then `PATCH /files/:fileId`.
+4. As viewer: GET list + file; watch PATCH/DELETE return 403.
+
+---
+
 *Append future sessions below this line.*

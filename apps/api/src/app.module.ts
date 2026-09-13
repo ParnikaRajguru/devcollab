@@ -4,9 +4,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './users/user.entity';
 import { Project } from './projects/project.entity';
 import { ProjectMember } from './projects/project-member.entity';
+import { File } from './files/file.entity';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { ProjectsModule } from './projects/projects.module';
+import { FilesModule } from './files/files.module';
 
 @Module({
   imports: [
@@ -20,7 +22,7 @@ import { ProjectsModule } from './projects/projects.module';
         username: config.get('DATABASE_USER'),
         password: config.get('DATABASE_PASSWORD'),
         database: config.get('DATABASE_NAME'),
-        entities: [User, Project, ProjectMember], 
+        entities: [User, Project, ProjectMember, File],
         synchronize: true, // DEV ONLY — auto-creates tables; we'll discuss migrations later
       }),
     }),
@@ -29,6 +31,7 @@ import { ProjectsModule } from './projects/projects.module';
     UsersModule,
     AuthModule,
     ProjectsModule,
+    FilesModule,
   ],
 })
 export class AppModule {}
