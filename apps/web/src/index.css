@@ -1,0 +1,88 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  color: #e5e7eb;
+  background-color: #111827;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app {
+  width: 100%;
+  max-width: 480px;
+  padding: 2rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.auth-form h2 {
+  font-size: 1.5rem;
+  color: #f9fafb;
+}
+
+.auth-form input {
+  padding: 0.75rem;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  background: #1f2937;
+  color: #f9fafb;
+  font-size: 1rem;
+}
+
+.auth-form button {
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: #3b82f6;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.auth-form button:hover { background: #2563eb; }
+
+.auth-form .link {
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.auth-form .link a { color: #3b82f6; text-decoration: none; }
+
+.error {
+  color: #f87171;
+  font-size: 0.875rem;
+  min-height: 1.25rem;
+}
+
+.home-card {
+  background: #1f2937;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.home-card h2 { color: #f9fafb; margin-bottom: 0.5rem; }
+.home-card p { color: #9ca3af; margin-bottom: 1.5rem; }
+
+.home-card button {
+  padding: 0.6rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  background: #374151;
+  color: #f9fafb;
+  cursor: pointer;
+}
+
+.home-card button:hover { background: #4b5563; }

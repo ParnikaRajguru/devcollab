@@ -2,6 +2,11 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './users/user.entity';
+import { Project } from './projects/project.entity';
+import { ProjectMember } from './projects/project-member.entity';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { ProjectsModule } from './projects/projects.module';
 
 @Module({
   imports: [
@@ -15,10 +20,15 @@ import { User } from './users/user.entity';
         username: config.get('DATABASE_USER'),
         password: config.get('DATABASE_PASSWORD'),
         database: config.get('DATABASE_NAME'),
-        entities: [User], 
+        entities: [User, Project, ProjectMember], 
         synchronize: true, // DEV ONLY — auto-creates tables; we'll discuss migrations later
       }),
     }),
+    // Feature modules get listed here; UsersModule brings its own
+    // controller/service/repository wiring.
+    UsersModule,
+    AuthModule,
+    ProjectsModule,
   ],
 })
 export class AppModule {}

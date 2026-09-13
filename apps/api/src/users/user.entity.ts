@@ -13,7 +13,11 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  // select: false means TypeORM EXCLUDES this column from every SELECT by
+  // default. Queries that genuinely need the hash must re-add it explicitly
+  // (UsersService.findByEmail does addSelect). This is the backstop that keeps
+  // password hashes out of joined responses — e.g. Project members, comments.
+  @Column({ select: false })
   password_hash: string;
 
   @Column()
